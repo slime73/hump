@@ -30,14 +30,30 @@ local sqrt, cos, sin, atan2 = math.sqrt, math.cos, math.sin, math.atan2
 local vector = {}
 vector.__index = vector
 
-local function new(x,y)
-	return setmetatable({x = x or 0, y = y or 0}, vector)
-end
-local zero = new(0,0)
+local hasffi, ffi = pcall(require, "ffi")
 
-local function isvector(v)
-	return getmetatable(v) == vector
+local new
+local isvector
+
+if hasffi then
+	ffi.cdef "struct hump_vector { double x, y; };"
+
+	new = ffi.typeof("struct hump_vector")
+	
+	function isvector(v)
+		return ffi.typeof(v) == new
+	end
+else
+	function new(x,y)
+		return setmetatable({x = x or 0, y = y or 0}, vector)
+	end
+	
+	function isvector(v)
+		return getmetatable(v) == vector
+	end
 end
+
+local zero = new(0,0)
 
 function vector:clone()
 	return new(self.x, self.y)
@@ -148,14 +164,14 @@ function vector:perpendicular()
 end
 
 function vector:projectOn(v)
-	assert(isvector(v), "invalid argument: cannot project vector on " .. type(v))
+	assert(isvector(v), "projectOn: wrong argument types (<vector> expected)")
 	-- (self * v) * v / v:len2()
 	local s = (self.x * v.x + self.y * v.y) / (v.x * v.x + v.y * v.y)
 	return new(s * v.x, s * v.y)
 end
 
 function vector:mirrorOn(v)
-	assert(isvector(v), "invalid argument: cannot mirror vector on " .. type(v))
+	assert(isvector(v), "mirrorOn: wrong argument types (<vector> expected)")
 	-- 2 * self:projectOn(v) - self
 	local s = 2 * (self.x * v.x + self.y * v.y) / (v.x * v.x + v.y * v.y)
 	return new(s * v.x - self.x, s * v.y - self.y)
@@ -185,6 +201,9 @@ function vector:trimmed(maxLen)
 	return self:clone():trim_inplace(maxLen)
 end
 
+if hasffi then
+	ffi.metatype(new, vector)
+end
 
 -- the module
 return setmetatable({new = new, isvector = isvector, zero = zero},
