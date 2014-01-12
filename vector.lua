@@ -41,7 +41,7 @@ if hasffi then
 	new = ffi.typeof("struct hump_vector")
 	
 	function isvector(v)
-		return ffi.typeof(v) == new
+		return ffi.istype(new, v)
 	end
 else
 	function new(x,y)
