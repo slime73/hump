@@ -31,11 +31,12 @@ local vector = {}
 vector.__index = vector
 
 local hasffi, ffi = pcall(require, "ffi")
+local jitenabled = jit and jit.status() or false
 
 local new
 local isvector
 
-if hasffi then
+if hasffi and jitenabled then
 	ffi.cdef "struct hump_vector { double x, y; };"
 
 	new = ffi.typeof("struct hump_vector")
@@ -201,7 +202,7 @@ function vector:trimmed(maxLen)
 	return self:clone():trim_inplace(maxLen)
 end
 
-if hasffi then
+if hasffi and jitenabled then
 	ffi.metatype(new, vector)
 end
 
