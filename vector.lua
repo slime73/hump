@@ -186,16 +186,16 @@ end
 -- ref.: http://blog.signalsondisplay.com/?p=336
 function vector:trim_inplace(maxLen)
 	local s = maxLen * maxLen / self:len2()
-	s = s < 1 and 1 or math.sqrt(s)
+	s = (s > 1 and 1) or math.sqrt(s)
 	self.x, self.y = self.x * s, self.y * s
 	return self
 end
 
 function vector:angleTo(other)
 	if other then
-		return atan2(self.y, self.y) - atan2(other.y, other.x)
+		return atan2(self.y, self.x) - atan2(other.y, other.x)
 	end
-	return atan2(self.y, self.y)
+	return atan2(self.y, self.x)
 end
 
 function vector:trimmed(maxLen)
